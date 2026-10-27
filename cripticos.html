@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crípticos</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#12141c">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Crípticos">
+<style>
+:root{--bg:#12141c;--card:#1a1e2a;--tx:#e9e6df;--mut:#9aa0b0;--ac:#8fb8ff;--ok:#5fd39a;--bad:#ff8a8a;--bd:#2b3142;--box:#232838}
+:root[data-theme=light]{--bg:#f3f1ec;--card:#fffefb;--tx:#1d2030;--mut:#5d6374;--ac:#2d56c4;--ok:#157a4b;--bad:#b3261e;--bd:#d8d4ca;--box:#ece9e1}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;justify-content:center;padding:16px}
+main{width:100%;max-width:640px}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+h1{font:700 1.4rem Georgia,"Times New Roman",serif;margin:0}
+.top{display:flex;gap:6px}
+button{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px 14px;cursor:pointer}
+button:hover{border-color:var(--ac)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+button.main{background:var(--ac);color:#0d1220;border-color:var(--ac);font-weight:600}
+.sm{padding:6px 10px;font-size:.9rem}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px;margin-bottom:12px}
+.meta{display:flex;justify-content:space-between;color:var(--mut);font-size:.9rem;margin-bottom:8px}
+.track{height:5px;background:var(--box);border-radius:3px;overflow:hidden;margin-bottom:16px}
+#bar{height:100%;width:0;background:var(--ok);transition:width .3s}
+#clue{font:1.55rem/1.35 Georgia,"Times New Roman",serif;margin:0 0 20px}
+#boxes{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+#boxes span{width:36px;height:44px;display:grid;place-items:center;background:var(--box);border-bottom:3px solid var(--ac);border-radius:6px 6px 0 0;font:700 1.3rem Georgia,serif;text-transform:uppercase}
+#boxes.ok span{border-color:var(--ok)}
+input{width:100%;font:inherit;font-size:1.1rem;color:var(--tx);background:var(--box);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:12px}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.row button{flex:1 1 auto}
+#msg{min-height:1.5em;margin:12px 0 0;font-weight:600}
+#msg.ok{color:var(--ok)}#msg.bad{color:var(--bad)}
+#hint{margin-top:12px;padding:14px;border-left:3px solid var(--ac);background:var(--box);border-radius:0 10px 10px 0}
+#hint p{margin:8px 0 0}
+.tag{display:inline-block;background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:2px 10px;font-size:.9rem}
+.nav{display:flex;justify-content:space-between;gap:8px}
+details{color:var(--mut);font-size:.95rem}
+summary{cursor:pointer;color:var(--tx)}
+details ul{padding-left:18px;margin:10px 0 0}
+details li{margin-bottom:6px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Crípticos</h1>
+  <div class="top">
+    <button class="sm" id="lvl">Nivel: Medio</button>
+    <button class="sm" id="mode" title="Cambiar orden">Orden: aleatorio</button>
+    <button class="sm" id="theme" title="Cambiar tema">☀️</button>
+  </div>
+</header>
+
+<section class="card">
+  <div class="meta"><span id="prog"></span><span id="score"></span></div>
+  <div class="track"><div id="bar"></div></div>
+  <p id="clue"></p>
+  <div id="boxes" aria-hidden="true"></div>
+  <input id="ans" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribí tu respuesta" aria-label="Respuesta">
+  <div class="row">
+    <button class="main" id="check">Comprobar respuesta</button>
+    <button id="hintbtn">Ver pista / Explicación</button>
+  </div>
+  <p id="msg" role="status"></p>
+  <div id="hint" hidden></div>
+</section>
+
+<div class="nav">
+  <button id="prev">← Anterior</button>
+  <button id="reset">Reiniciar</button>
+  <button id="next">Siguiente →</button>
+</div>
+
+<div class="card" style="margin-top:12px">
+<details>
+<summary>Cómo se lee un críptico</summary>
+<ul>
+<li>Cada pista tiene una <b>definición</b> (al principio o al final) y un juego de palabras que lleva a la misma respuesta.</li>
+<li>🔀 <b>Anagrama</b>: letras reordenadas («revuelto», «loco», «desordenado»).</li>
+<li>📦 <b>Palabra escondida</b>: oculta en letras consecutivas («esconde», «alberga»).</li>
+<li>🗃️ <b>Contenedor</b>: una palabra abraza a otra («contiene», «rodea», «se mete en»).</li>
+<li>🔄 <b>Reverso</b>: se lee al revés («al revés», «que vuelve»).</li>
+<li>🎯 <b>Selector</b>: letras puntuales («iniciales de», «da inicio», «el corazón de»).</li>
+<li>✂️ <b>Sustracción</b>: se recortan letras («sin cabeza», «sin cola»).</li>
+<li>🧩 <b>Misceláneas</b>: números romanos, puntos cardinales, letras sueltas.</li>
+<li>Niveles: <b>Medio</b>, <b>Difícil</b> (solo combinaciones de dos mecanismos) y <b>Experto</b> (sin definición: se revela con la pista).</li>
+<li>Las pistas difíciles combinan dos mecanismos a la vez (por ejemplo, selector + anagrama). Al completar todas, «Siguiente» abre una ronda nueva con jugadas distintas.</li>
+</ul>
+</details>
+</div>
+</main>
+
+<script>
+const T={anagrama:["🔀","Anagrama"],escondida:["📦","Palabra escondida"],contenedor:["🗃️","Contenedor"],reverso:["🔄","Reverso"],selector:["🎯","Selector"],sustraccion:["✂️","Sustracción"],misc:["🧩","Miscelánea"]};
+
+//GEN-START
+const RAW=`ABEJA:insecto que hace miel|CABALLO:equino de montar|CONEJO:orejón saltarín|DELFIN:mamífero marino juguetón|ELEFANTE:paquidermo de trompa|GALLINA:ave que pone huevos|GORILA:gran simio|HORMIGA:insecto trabajador|JIRAFA:rumiante de cuello largo|LANGOSTA:crustáceo de lujo|LECHUZA:ave nocturna|LOBO:cánido que aúlla|MARIPOSA:insecto de alas coloridas|MOSQUITO:zumbador que pica|PALOMA:ave de la paz|PANTERA:felino negro|PAVO:ave de Navidad|PERRO:mejor amigo del hombre|PINGUINO:ave que no vuela|SERPIENTE:reptil sin patas|TIBURON:pez temido|TORTUGA:reptil con caparazón|VACA:rumiante lechera|ZORRO:cánido astuto|CIERVO:rumiante con astas|CANGURO:marsupial saltador|COCODRILO:reptil de río|BUHO:ave de grandes ojos|LAGARTO:reptil pequeño|GAVIOTA:ave marina|CONDOR:ave andina|VOLCAN:montaña que erupciona|CASCADA:caída de agua|DESIERTO:tierra árida|BOSQUE:terreno de árboles|SELVA:bosque tropical|PLAYA:orilla arenosa|ARROYO:río pequeño|CAVERNA:cueva profunda|TORMENTA:tempestad|RAYO:descarga del cielo|VIENTO:aire en movimiento|NIEVE:agua helada que cae|NIEBLA:nube a ras del suelo|GLACIAR:río de hielo|PRADERA:campo de pasto|LLANURA:terreno plano|COLINA:elevación suave|VALLE:tierra entre montes|ORILLA:borde del agua|LAGUNA:lago pequeño|PANTANO:terreno encharcado|ESTRELLA:astro que brilla de noche|PLANETA:mundo que orbita el sol|COMETA:astro con cola|GALAXIA:conjunto de estrellas|VERANO:estación calurosa|INVIERNO:estación fría|RELAMPAGO:destello de tormenta|ARENA:granos de la playa|CORAL:animal del arrecife|PIEDRA:trozo de roca|MONTE:elevación del terreno|MANZANA:fruta que tentó a Eva|NARANJA:cítrico anaranjado|BANANA:fruta amarilla|FRUTILLA:fresa argentina|DURAZNO:fruta aterciopelada|TOMATE:fruto rojo de ensalada|ZANAHORIA:raíz naranja|PAPA:tubérculo|CEBOLLA:bulbo que hace llorar|LENTEJA:legumbre pequeña|GARBANZO:legumbre redonda|EMPANADA:masa rellena al horno|MILANESA:carne rebozada|ALFAJOR:dulce de dos tapas|CHOCOLATE:dulce de cacao|HELADO:postre frío|GALLETA:masa seca y crujiente|TOSTADA:pan dorado|MERMELADA:fruta dulce en conserva|QUESO:lácteo curado|MANTECA:grasa de la leche|ASADO:carne a la parrilla|CHORIZO:embutido de parrilla|PASTA:fideos|SOPA:plato líquido|ENSALADA:mezcla de vegetales|ARROZ:cereal de paella|ACEITE:grasa de oliva|VINAGRE:aliño ácido|TORTA:pastel|PIZZA:especialidad italiana redonda|VENTANA:abertura con vidrio|ESCALERA:conjunto de peldaños|ALMOHADA:apoyo de la cabeza|COLCHON:base blanda de la cama|ESPEJO:refleja la imagen|CORTINA:tela de ventana|BALCON:saliente de un piso|TECHO:cubierta de la casa|PARED:muro interior|PUERTA:entrada|LLAVE:abre cerraduras|CERRADURA:mecanismo de la puerta|LAMPARA:da luz|SILLON:asiento mullido|CAJON:parte de la cómoda|ARMARIO:mueble de ropa|ESCOBA:sirve para barrer|CUCHARA:cubierto para sopa|TENEDOR:cubierto de púas|CUCHILLO:cubierto que corta|JARRA:recipiente con asa|BOTELLA:envase de cuello largo|SARTEN:utensilio para freír|HORNO:cocina de calor cerrado|HELADERA:conserva el frío|RELOJ:marca la hora|TIJERAS:cortan papel|LAPIZ:escribe con grafito|CUADERNO:hojas para apuntes|MOCHILA:bolso de espalda|PARAGUAS:protege de la lluvia|BUFANDA:abriga el cuello|GUANTE:cubre la mano|ZAPATO:calzado|CAMISA:prenda con botones|PANTALON:prenda de dos piernas|SOMBRERO:cubre la cabeza|MEDICO:cura enfermos|BOMBERO:apaga incendios|CARPINTERO:trabaja la madera|PANADERO:hace pan|PINTOR:artista de lienzos|ESCRITOR:autor de libros|PILOTO:conduce aviones|MARINERO:hombre de mar|CAMPESINO:trabaja la tierra|PASTOR:cuida ovejas|JUEZ:dicta sentencias|SOLDADO:militar raso|POLICIA:agente de la ley|ABOGADO:letrado|PROFESOR:educador|ALUMNO:quien aprende|ACTOR:intérprete de teatro|CANTANTE:vocalista|BAILARIN:quien danza|CAZADOR:persigue presas|PESCADOR:atrapa peces|GRANJERO:criador en la granja|HEROE:valiente admirado|PRINCESA:hija de reyes|VIGILANTE:guardián atento|VECINO:habitante cercano|TURISTA:viajero de paseo|DETECTIVE:investigador de casos|ESPIA:agente secreto|FANTASMA:espectro|VAMPIRO:chupasangre|FELICIDAD:alegría plena|TRISTEZA:pena|CORAJE:valentía|MEMORIA:capacidad de recordar|SECRETO:lo que se calla|MISTERIO:enigma|SILENCIO:ausencia de ruido|AVENTURA:peripecia emocionante|VIAJE:traslado lejano|CAMINAR:andar|CORRER:ir a la carrera|SALTAR:brincar|NADAR:avanzar en el agua|BAILAR:mover el cuerpo al ritmo|CANTAR:entonar|DIBUJAR:trazar figuras|ESCRIBIR:redactar a mano|ESTUDIAR:preparar un examen|DORMIR:descansar de noche|COMER:ingerir|BEBER:tomar líquido|LLORAR:derramar lágrimas|GRITAR:hablar a voces|ESCUCHAR:prestar oído|MIRAR:fijar la vista|PENSAR:razonar|RECORDAR:traer a la memoria|OLVIDAR:perder de la memoria|CONSTRUIR:edificar|DESTRUIR:arruinar|ABRIR:quitar el cierre|CERRAR:tapar|EMPUJAR:presionar para mover|LANZAR:arrojar|ATRAPAR:capturar|ESCONDER:ocultar|ENCONTRAR:hallar|PERDER:extraviar|GANAR:vencer|BRILLANTE:que resplandece|VELOZ:rápido|LENTO:pausado|FUERTE:robusto|DEBIL:sin fuerzas|ANTIGUO:de otra época|MODERNO:actual|ENORME:muy grande|DIMINUTO:muy pequeño|OSCURO:sin luz|CLARO:luminoso|AMARGO:de sabor áspero|SUAVE:blando al tacto|PROFUNDO:de gran hondura|LEJANO:distante|CERCANO:próximo|SALVAJE:no domesticado|TRANQUILO:sereno|ALEGRE:contento|VALIENTE:sin miedo|ASTUTO:muy sagaz|SILENCIOSO:sin ruido|CIUDAD:urbe|PUEBLO:localidad pequeña|CALLE:vía urbana|PLAZA:espacio abierto del barrio|PUENTE:cruza el río|TUNEL:paso subterráneo|CASTILLO:fortaleza real|TEMPLO:lugar de culto|MUSEO:guarda obras de arte|ESCUELA:donde se aprende|HOSPITAL:sanatorio|BIBLIOTECA:sala de libros|MERCADO:lugar de compras|PUERTO:donde atracan barcos|AEROPUERTO:terminal de vuelos|ESTACION:parada del tren|FRONTERA:límite entre países|CONTINENTE:gran masa de tierra|PAISAJE:vista natural|HORIZONTE:línea lejana del cielo|TESORO:riqueza escondida|BRUJULA:señala el norte|BANDERA:símbolo de un país|MONEDA:pieza de dinero|DINERO:plata|CORONA:adorno de reyes|ESCUDO:protege al guerrero|DRAGON:monstruo que escupe fuego|MAGIA:arte de ilusiones|HECHIZO:encantamiento|LEYENDA:relato tradicional|CUENTO:narración breve|POEMA:obra en verso|CANCION:tema musical|GUITARRA:instrumento de seis cuerdas|TAMBOR:instrumento de parche|VIOLIN:instrumento de arco|PIANO:instrumento de teclas|TROMPETA:instrumento de metal|MELODIA:sucesión de notas|RITMO:compás|PELICULA:film|TEATRO:escenario con telón|PINTURA:obra de color|ESCULTURA:obra tallada|FOTOGRAFIA:imagen captada|COMPUTADORA:equipo informático|TELEFONO:comunica a distancia|TELEVISOR:pantalla del living|CAMARA:capta imágenes|BICICLETA:vehículo de pedales|COLECTIVO:ómnibus urbano argentino|AVION:vuela con alas|BARCO:navega|LOCOMOTORA:tira de los vagones|SUBTE:metro porteño|MOTOCICLETA:dos ruedas a motor|SEMAFORO:regula el tránsito|VEREDA:acera argentina|PIRATA:ladrón del mar|CAPITAN:jefe de barco|ISLOTE:isla pequeña|TERMO:conserva el agua caliente|BOMBILLA:caña del mate|YERBA:hierba del mate|GAUCHO:jinete de la pampa|PAMPA:llanura argentina|MILONGA:baile porteño|TANGO:baile de Gardel|ZAMBA:danza folclórica|FOGON:fuego de campo|CARPA:tienda de campaña|LINTERNA:luz portátil|SOGA:cuerda gruesa|HAMACA:cama colgante|CASCO:protege la cabeza|TIMBRE:llama a la puerta|BALDE:cubo|MARTILLO:golpea clavos|TORNILLO:se enrosca|ESCALON:peldaño|VITRINA:escaparate|PERFUME:fragancia|JABON:limpia con espuma|TOALLA:seca el cuerpo|PEINE:ordena el pelo|MANTEL:cubre la mesa`;
+const W=RAW.split("|").map(x=>{const i=x.indexOf(":");return{a:x.slice(0,i),d:x.slice(i+1)}});
+const SM="EL LA LO LOS LAS UN UNA DE EN SE ME TE LE SU MI TU NO SI YA ES VA VE DA DI SOL MAR PAN REY OSO ALA OLA UNO DOS TRES RIO ROSA PEZ LUZ VOZ MES DIA ALMA ARCA ATAR AMOR ROMA ODIO OIDO MESA PATO GATO CASA SAL MAL BIEN CON SIN POR PARA TRAS ANTE BAJO OJO PIE MANO BOCA PELO DEDO CARA LABIO NARIZ TODO NADA ALGO OTRO ESTE ESTA ESE ESA AQUI ALLI HOY AYER SER ESTAR IR VER DAR HACER OIR REMO ARO ASA ANA ADAN EVA LUNA MONO TOPO RATA LORO PUMA CABRA OVEJA MULA POTRO TORO LEON ORO PLATA HIERRO CAL ARTE PARTE TIERRA CIELO FUEGO AGUA AIRE VIDA PAZ GUERRA REINA REINO NORTE SUR OESTE ELLA NOS LES MUY MAS MENOS CAMA COSA CASO CANTO CENA COMA CORO COPA CUNA DADO DOLOR DUDA EDAD ERA FIN FLOR FOCO GOTA GRANO HOJA HILO HUESO IDA ISLA JUGO LADO LAGO LANA LATA LAZO LECHE LIMA LIMON LINEA LISTA LLAMA LOMA LUCHA MADRE MAPA MASA MATE MEDIO MIEL MINA MODA MORA MOTO MURO NIDO NOCHE NOTA NUBE NUEVE OBRA OLOR ONDA ORDEN PADRE PALA PALO PASO PATA PERA PERLA PESO PICO PISO PLAN POCO PUNTA RAMA RAYA RED REZO RISA ROCA ROPA SACO SALA SANTO SECA SED TELA TIRO TRIGO TUBO UVA VELA VINO ZONA AL DEL SUS MIS TUS ESO QUE COMO ANTES LUEGO AHORA PERO SINO AUN ASI RE FA DO NOTA TREN TAXI REMA ROMPE RIEGA PISA PASA PESA MIRA CANTA LAVA LEE VOLAR".split(" ");
+const POOL=[...new Set([...W.map(w=>w.a),...SM])],PS=new Set(POOL);
+const rev=s=>[...s].reverse().join(""),srt=s=>[...s].sort().join(""),cap=s=>s[0].toUpperCase()+s.slice(1),L=s=>s.toLowerCase(),Q=s=>"«"+L(s)+"»";
+const hash=s=>{let h=2166136261;for(const c of s)h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0};
+const rng=s=>()=>{s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const pick=(r,a)=>a[Math.floor(r()*a.length)];
+const ENDS={},STARTS={},SRT={},INIT={},SUB={},AL={},add=(m,k,v)=>(m[k]=m[k]||[]).push(v);
+for(const w of POOL){
+  for(let k=1;k<=Math.min(w.length,8);k++){add(ENDS,w.slice(-k),w);add(STARTS,w.slice(0,k),w)}
+  if(w.length>=3){add(SRT,srt(w),w);add(INIT,w[0],w)}
+  if(w.length>=4){
+    add(SUB,w.slice(1),["sin cabeza",w]);add(SUB,w.slice(0,-1),["sin cola",w]);
+    if(w.length%2)add(SUB,w.slice(0,w.length>>1)+w.slice((w.length>>1)+1),["sin corazón",w]);
+    if(w.length>=5)add(SUB,w.slice(1,-1),["sin sus extremos",w]);
+    if(w.length<=8)for(const l of "AEIOSRNLDCTM")add(AL,srt(w+l),[w,l]);
+  }
+}
+const IA=["en desorden","hecho un lío","en revoltijo","en forma caótica","sin orden","patas para arriba","en un torbellino"],
+IR=["de atrás para adelante","al revés","en sentido contrario","marcha atrás","dando la vuelta"],
+IH=["se esconde en","se oculta en","asoma en","se refugia en"],
+II=["se mete en","se cuela en","entra en","queda dentro de"],
+IO=["abraza a","rodea a","contiene a","encierra a"];
+function hid(T,r,rv){
+  const S=rv?rev(T):T,o=[];
+  for(let k=1;k<S.length;k++){const a=ENDS[S.slice(0,k)],b=STARTS[S.slice(k)];if(!a||!b)continue;
+    for(const A of a)for(const B of b)if(A.length>k||B.length>S.length-k)o.push([A,B,k])}
+  if(!o.length)return null;
+  const[A,B,k]=pick(r,o),n=S.length-k;
+  return{t:rv?["escondida","reverso"]:["escondida"],play:`${pick(r,IH)} ${Q(A+" "+B)}${rv?", leído "+pick(r,IR):""}`,
+   ex:`Relleno: «${L(A.slice(0,-k))}<b>${L(A.slice(-k))} ${L(B.slice(0,n))}</b>${L(B.slice(n))}»${rv?", y lo escondido se lee al revés":""}.`}
+}
+function con(T,r){
+  const o=[];
+  for(let i=1;i<T.length;i++)for(let j=i+2;j<T.length&&j<=i+4;j++){
+    const B=T.slice(i,j),A=T.slice(0,i)+T.slice(j);if(PS.has(B)&&PS.has(A)&&A.length>=3)o.push([A,B,i])}
+  if(!o.length)return null;
+  const[A,B,i]=pick(r,o);
+  return{t:["contenedor"],play:r()<.5?`${Q(B)} ${pick(r,II)} ${Q(A)}`:`${Q(A)} ${pick(r,IO)} ${Q(B)}`,
+   ex:`${B} entra en ${A} (${A.slice(0,i)}|${A.slice(i)}): ${A.slice(0,i)} + ${B} + ${A.slice(i)} = ${T}.`}
+}
+function sub(T,r){const x=SUB[T];if(!x)return null;const[m,X]=pick(r,x);return{t:["sustraccion"],play:`${Q(X)} ${m}`,ex:`${X} ${m} → ${T}.`}}
+function pc(S,r){
+  const o=[];
+  if(S.length>=2&&PS.has(S))o.push({k:0,x:Q(S),e:S});
+  if(S.length>=2&&PS.has(rev(S)))o.push({k:1,x:`${Q(rev(S))} ${pick(r,IR)}`,e:`${rev(S)} al revés = ${S}`});
+  const sa=(SRT[srt(S)]||[]).filter(w=>w!==S);
+  if(S.length>=3&&sa.length){const w=pick(r,sa);o.push({k:2,x:`${Q(w)} ${pick(r,IA)}`,e:`${w} reordenada = ${S}`})}
+  return o;
+}
+function cha(T,r){
+  const o=[];
+  for(let k=2;k<=T.length-2;k++){const a=pc(T.slice(0,k),r),b=pc(T.slice(k),r);for(const x of a)for(const y of b)if(x.k||y.k)o.push([x,y])}
+  if(!o.length)return null;
+  const[x,y]=pick(r,o),t=["misc"];
+  if(x.k==1||y.k==1)t.push("reverso");if(x.k==2||y.k==2)t.push("anagrama");
+  return{t,play:`${x.x} ${pick(r,["y después","seguido de","más","con"])} ${y.x}`,ex:`${x.e}; ${y.e}. Juntos: ${T}.`};
+}
+function anl(T,r){const x=AL[srt(T)];if(!x)return null;const[w,l]=pick(r,x);if(w===T)return null;
+  return{t:["anagrama"],play:`${Q(w)} más una ${l} ${pick(r,IA)}`,ex:`Letras de ${w} + ${l}, reordenadas: ${T}.`}}
+const shuf=(T,r)=>{let s=T,n=0;while(s===T&&n++<9)s=[...T].sort(()=>r()-.5).join("");return s};
+const acr=(S,r)=>{const w=[];for(const c of S){if(!INIT[c])return null;w.push(pick(r,INIT[c]))}return w};
+const hl=w=>w.map(x=>`<b>${x[0]}</b>${L(x.slice(1))}`).join(" ");
+function ac1(T,r){const w=acr(T,r);if(!w)return null;return{t:["selector"],play:`${pick(r,["iniciales de","cabezas de","primeras letras de"])} ${Q(w.join(" "))}`,ex:`${hl(w)} → ${T}.`}}
+function ac2(T,r){const s=shuf(T,r),w=acr(s,r);if(!w)return null;
+  return{t:["selector","anagrama"],play:`iniciales de ${Q(w.join(" "))}, ${pick(r,IA)}`,ex:`${hl(w)} → ${s}; reordenadas: ${T}.`}}
+function rw(T,r){const v=rev(T);if(v===T||!PS.has(v))return null;return{t:["reverso"],play:`${Q(v)}, ${pick(r,IR)}`,ex:`${v} al revés = ${T}.`}}
+function raw(T,r){const s=shuf(T,r);return{t:["anagrama"],play:`${L(s)} ${pick(r,IA)}`,ex:`Letras ${s} reordenadas: ${T}.`}}
+const TS=new Set(W.map(w=>srt(w.a))),PAIR={},S6=POOL.filter(w=>w.length>=2&&w.length<=6);
+for(const a of S6)for(const b of S6)if(a<b&&a.length+b.length>=5&&a.length+b.length<=9){const k=srt(a+b);if(TS.has(k))add(PAIR,k,[a,b])}
+function an2(T,r){
+  const x=(PAIR[srt(T)]||[]).filter(([a,b])=>a+b!==T&&b+a!==T);if(!x.length)return null;
+  const[a,b]=pick(r,x);
+  return{t:["anagrama"],play:`${Q(a)} y ${Q(b)} ${pick(r,IA)}`,ex:`${a} + ${b}, reordenadas: ${T}.`};
+}
+function ps(T,r,lv=0){
+  const o=[];
+  for(let k=2;k<=T.length-(lv?4:3);k++){
+    if(PS.has(T.slice(0,k)))o.push([0,T.slice(0,k),T.slice(k)]);
+    if(PS.has(T.slice(-k)))o.push([1,T.slice(-k),T.slice(0,-k)]);
+  }
+  if(!o.length)return null;
+  const[m,a,b]=pick(r,o),rv=rev(b)!==b&&r()<.45,x=rv?rev(b):shuf(b,r),
+   ind=rv?pick(r,IR):pick(r,IA),j=pick(r,["y después","seguido de","más"]);
+  return{t:["misc",rv?"reverso":"anagrama"],
+   play:m?`${L(x)} ${ind} ${j} ${Q(a)}`:`${Q(a)} ${j} ${L(x)} ${ind}`,
+   ex:`${a} + ${b} (${x} ${rv?"al revés":"reordenadas"}): ${T}.`};
+}
+function mk(w,r0,lv=0){
+  const T=w.a,r=rng(hash(T)+r0*7919);
+  const fs=[[3,hid(T,r,0)],[3,hid(T,r,1)],[4,con(T,r)],[3,sub(T,r)],[4,cha(T,r)],[4,anl(T,r)],[4,ps(T,r,lv)],[lv||T.length>6?0:.5,ac1(T,r)],[T.length<=7?1:0,ac2(T,r)],[lv?0:2,rw(T,r)],[lv||T.length>7?0:1,raw(T,r)],[lv?7:3,an2(T,r)]].filter(x=>x[1]&&x[0]);
+  if(!fs.length)fs.push([1,raw(T,r)]);
+  let p=r()*fs.reduce((s,x)=>s+x[0],0),c=fs[0][1];
+  for(const x of fs){p-=x[0];if(p<=0){c=x[1];break}}
+  return{a:T,d:w.d,p:cap(c.play),c:r()<.5?`${cap(w.d)}: ${c.play}`:`${cap(c.play)}: ${w.d}`,t:c.t,e:c.ex};
+}
+const build=(r,l)=>W.map(w=>mk(w,r,l));
+let round=1,level=0,C=build(1,0);
+//GEN-END
+
+const $=id=>document.getElementById(id);
+const norm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z]/g,"");
+let order=[...C.keys()],pos=0,rnd=false,stage=0,solved=new Set();
+try{const g=JSON.parse(localStorage.getItem("cripticos3")||"{}");round=g.round||1;level=g.level||0;solved=new Set(g.solved||[]);C=build(round,level)}catch(e){}
+const save=()=>{try{localStorage.setItem("cripticos3",JSON.stringify({round,level,solved:[...solved]}))}catch(e){}};
+const cur=()=>C[order[pos]];
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+order=shuffle(order);rnd=true;
+
+function stats(){
+  $("prog").textContent=`Ronda ${round}, pista ${pos+1} de ${C.length}`;
+  $("score").textContent=`Resueltas: ${solved.size}/${C.length}`;
+  $("bar").style.width=(solved.size/C.length*100)+"%";
+}
+function fill(word){
+  [...$("boxes").children].forEach((s,i)=>s.textContent=word[i]||"");
+}
+function render(){
+  const q=cur(),len=norm(q.a).length;
+  stage=0;stats();
+  $("clue").textContent=`${level==2?q.p:q.c} (${len})`;
+  $("ans").value="";$("ans").maxLength=len;$("ans").disabled=false;
+  $("boxes").className="";
+  $("boxes").innerHTML="<span></span>".repeat(len);
+  $("msg").textContent="";$("msg").className="";
+  $("hint").hidden=true;
+  $("hintbtn").textContent="Ver pista / Explicación";
+  if(solved.has(order[pos])){showAnswer(true)}
+}
+function showAnswer(ok){
+  const q=cur();
+  fill(norm(q.a));
+  $("boxes").className=ok?"ok":"";
+  $("ans").value="";$("ans").disabled=true;
+  showHint(3);
+}
+function showHint(n){
+  const q=cur(),h=$("hint");
+  stage=n;
+  h.hidden=false;
+  h.innerHTML=`${q.t.map(k=>'<span class="tag">'+T[k][0]+" "+T[k][1]+"</span>").join(" ")}`+(n>1?` Definición: <b>${q.d}</b>`:"")+(n>2?`<p>${q.e}</p><p>Respuesta: <b>${q.a}</b></p>`:"");
+  $("hintbtn").textContent=n>2?"Explicación abierta":n>1?"Ver explicación completa":"Ver definición";
+}
+function check(){
+  if($("ans").disabled)return;
+  const q=cur(),v=norm($("ans").value);
+  if(!v){return}
+  if(v===norm(q.a)){
+    solved.add(order[pos]);save();stats();
+    $("msg").textContent=solved.size===C.length?"Correcto. Completaste las "+C.length+": «Siguiente» abre una ronda nueva con jugadas distintas.":"Correcto.";$("msg").className="ok";
+    showAnswer(true);
+  }else{
+    $("msg").textContent=v.length<norm(q.a).length?"Faltan letras.":"No es. Probá de nuevo.";
+    $("msg").className="bad";
+  }
+}
+function go(d){pos=(pos+d+C.length)%C.length;render()}
+function newRound(){round++;solved=new Set();C=build(round,level);order=rnd?shuffle([...C.keys()]):[...C.keys()];pos=0;save();render()}
+
+$("check").onclick=check;
+$("ans").addEventListener("input",e=>fill(norm(e.target.value)));
+$("ans").addEventListener("keydown",e=>{if(e.key==="Enter")check()});
+$("hintbtn").onclick=()=>{if(stage<3)showHint(stage+1)};
+$("next").onclick=()=>{if(solved.size===C.length)newRound();else go(1)};
+$("prev").onclick=()=>go(-1);
+$("mode").onclick=()=>{
+  rnd=!rnd;
+  order=rnd?shuffle([...C.keys()]):[...C.keys()];
+  pos=0;
+  $("mode").textContent="Orden: "+(rnd?"aleatorio":"secuencial");
+  render();
+};
+$("reset").onclick=()=>{
+  solved=new Set();save();
+  order=rnd?shuffle([...C.keys()]):[...C.keys()];
+  pos=0;render();
+};
+$("theme").onclick=()=>{
+  const r=document.documentElement,l=r.dataset.theme==="dark";
+  r.dataset.theme=l?"light":"dark";
+  $("theme").textContent=l?"🌙":"☀️";
+};
+const LV=["Medio","Difícil","Experto"];
+$("lvl").onclick=()=>{level=(level+1)%3;C=build(round,level);save();$("lvl").textContent="Nivel: "+LV[level];render()};
+$("lvl").textContent="Nivel: "+LV[level];
+render();
+if("serviceWorker" in navigator&&location.protocol.startsWith("http"))
+  addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+</script>
+</body>
+</html>
